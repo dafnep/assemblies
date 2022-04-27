@@ -220,6 +220,63 @@ def association_grand_sim(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=2
 		results[i] = float(o)/float(k)
 	return results
 
+def association_grand_sim_multiple_areas(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,areas=2):
+	b = brain.Brain(p,save_winners=True)
+	total_stim_dict = {}
+	total_area_dict = {}
+	target_area = str(chr(64+(areas+1)))
+	for i in range(1, areas+1):	
+		stim_name = "stim" + str(chr(64+i))
+		b.add_stimulus(stim_name,k)
+		b.add_area(str(chr(64+i)),n,k,beta)
+		total_stim_dict[stim_name] = [str(chr(64+i))]
+		total_area_dict[str(chr(64+i))] = [str(chr(64+i))]
+	b.add_area(target_area,n,k,beta)
+	b.project(total_stim_dict,{})
+	# Create assemblies in each area to stability
+	for i in range(0,9):
+		b.project(total_stim_dict, total_area_dict)
+
+	# Add target area in lists of area_dict
+	for key, value in total_area_dict.items():
+		total_area_dict[key].append(target_area)
+
+	# Project the assembly of each area to the target area
+	for i in range(1, areas+1):	
+		stim_name = "stim" + str(chr(64+i))
+		area_name = str(chr(64+i))
+		stim_dict = {stim_name:[area_name]}
+		area_dict = {}
+		area_dict[area_name] = total_area_dict[area_name]
+		b.project(stim_dict,area_dict)
+		area_dict[target_area] = [target_area]
+		for j in range(0,9):
+			print(i,j,stim_dict,area_dict)
+			b.project(stim_dict,area_dict)
+	
+	# Project all assemblies to the target area
+	b.project(total_stim_dict, total_area_dict)
+	total_area_dict[target_area] = [target_area]
+	for i in range(0,min_iter-2):
+		b.project(total_stim_dict, total_area_dict)
+
+	results = {}
+	for i in range(0,min_iter,max_iter+1): # is there a mistake here? shouldn't it be range(min_iter, max_iter+1)?
+		b.project(total_stim_dict, total_area_dict)
+		b_copy = {}
+		b_copy_areas_winners = []
+		for j in range(1, areas+1):
+			b_copy[j] = copy.deepcopy(b)
+			area_name = str(chr(64+j))
+			stim_name = "stim" + str(chr(64+j))
+			# in copy j, project just str(chr(64+j))
+			b_copy[j].project({stim_name:[area_name]},{})
+			b_copy[j].project({},{area_name:[target_area]})
+			b_copy_areas_winners.append(b_copy[j].areas[target_area].winners)
+		o = bu.overlap(*b_copy_areas_winners)
+		results[i] = float(o)/float(k)
+	return results
+
 def merge_sim(n=100000,k=317,p=0.01,beta=0.05,max_t=50):
 	b = brain.Brain(p)
 	b.add_stimulus("stimA",k)
