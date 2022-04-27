@@ -19,6 +19,13 @@ def sim_load(file_name):
 def overlap(a,b):
 	return len(set(a) & set(b))
 
+# Compute item overlap between multiple lists viewed as sets.
+def overlap_multiple_lists(*args):
+	a = set(args[0])
+	for i in range(1, len(args)):
+		a = a & set(args[i])
+	return len(a)
+
 # Compute overlap of each list of winners in winners_list 
 # with respect to a specific winners set, namely winners_list[base]
 def get_overlaps(winners_list,base,percentage=False):
