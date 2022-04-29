@@ -222,22 +222,22 @@ def association_grand_sim(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=2
 		results[i] = float(o)/float(k)
 	return results
 
-def associate_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
-	b = brain.Brain(p,save_winners=True)
+def associate_multiple_areas(b, n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
+	#b = brain.Brain(p,save_winners=True)
 	total_stim_dict = {}
 	total_area_dict = {}
 	target_area = str(chr(64+(areas+1)))
 	for i in range(1, areas+1):	
-		stim_name = "stim" + str(chr(64+i))
-		b.add_stimulus(stim_name,k)
-		b.add_area(str(chr(64+i)),n,k,beta)
+		#stim_name = "stim" + str(chr(64+i))
+		#b.add_stimulus(stim_name,k)
+		#b.add_area(str(chr(64+i)),n,k,beta)
 		total_stim_dict[stim_name] = [str(chr(64+i))]
 		total_area_dict[str(chr(64+i))] = [str(chr(64+i))]
-	b.add_area(target_area,n,k,beta)
-	b.project(total_stim_dict,{})
+	#b.add_area(target_area,n,k,beta)
+	#b.project(total_stim_dict,{})
 	# Create assemblies in each area to stability
-	for i in range(0,9):
-		b.project(total_stim_dict, total_area_dict)
+	#for i in range(0,9):
+	#	b.project(total_stim_dict, total_area_dict)
 
 	# Add target area in lists of area_dict
 	for key, value in total_area_dict.items():
@@ -249,10 +249,10 @@ def associate_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,area
 		stim_dict = {stim_name:[area_name]}
 		area_dict = {}
 		area_dict[area_name] = total_area_dict[area_name]
-		b.project(stim_dict,area_dict)
+		#b.project(stim_dict,area_dict)
 		area_dict[target_area] = [target_area]
-		for j in range(0,9):
-			b.project(stim_dict,area_dict)
+		#for j in range(0,9):
+			#b.project(stim_dict,area_dict)
 
 	# Project all assemblies to the target area
 	b.project(total_stim_dict, total_area_dict)
@@ -262,9 +262,9 @@ def associate_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,area
 
 	return b
 
-def association_sim_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
+def association_sim_multiple_areas(b,n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
 	target_area = str(chr(64+(areas+1)))
-	b = associate_multiple_areas(n,k,p,beta,overlap_iter,areas)
+	b = associate_multiple_areas(b,n,k,p,beta,overlap_iter,areas)
 	return b.areas[target_area].saved_w,b.areas[target_area].saved_winners
 
 def association_grand_sim_multiple_areas(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,areas=2):

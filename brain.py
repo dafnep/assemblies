@@ -183,7 +183,7 @@ class Brain:
 		for area in to_update:
 			num_first_winners = self.project_into(self.areas[area], stim_in[area], area_in[area], verbose)
 			self.areas[area].num_first_winners = num_first_winners
-			print(num_first_winners)
+			#print(num_first_winners)
 			if self.save_winners:
 				self.areas[area].saved_winners.append(self.areas[area].new_winners)
 
@@ -315,7 +315,7 @@ class Brain:
 			# 1) can sample input from array of size total_k, use ranges
 			# 2) can use stars/stripes method: if m total inputs, sample (m-1) out of total_k
 		first_winner_to_inputs = {}
-		print('first_winner_inputs ' +str(first_winner_inputs))
+		#print('first_winner_inputs ' +str(first_winner_inputs))
 		#build neuron connections for only the new ones added!! if you have moire than one things projecting we build connections bt more than one neurons!(see total_k)
 		for i in range(num_first_winners):
 			input_indices = random.sample(range(0, total_k), int(first_winner_inputs[i]))
