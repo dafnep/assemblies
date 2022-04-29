@@ -48,7 +48,7 @@ def overlap_sim(n=100000,k=317,p=0.05,beta=0.1,project_iter=10):
 	for i in range(0,9):
 		b.project({"stimB":["B"]},
 			{"B":["B","C"],"C":["C"]})
-	# Project both A,B to C
+	# Project both A,B to C WHY?
 	b.project({"stimA":["A"],"stimB":["B"]},
 		{"A":["A","C"],"B":["B","C"]})
 	for i in range(0,project_iter):
@@ -66,8 +66,9 @@ def overlap_sim(n=100000,k=317,p=0.05,beta=0.1,project_iter=10):
 	b.project({},{"C":["D"]})
 	D_saved_winners = b.areas["D"].saved_winners
 	proj_intersection = bu.overlap(D_saved_winners[0], D_saved_winners[1])
+	print(D_saved_winners[0], D_saved_winners[1])
 	proj_overlap = float(proj_intersection)/float(k)
-
+	print(assembly_overlap,proj_overlap)
 	return assembly_overlap, proj_overlap
 
 def overlap_grand_sim(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=30):
@@ -123,7 +124,7 @@ def overlap_grand_sim(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=30):
 		D_saved_winners = b_copy1.areas["D"].saved_winners
 		proj_intersection = bu.overlap(D_saved_winners[0], D_saved_winners[1])
 		proj_overlap = float(proj_intersection)/float(k)
-
+		
 		print ("t=" + str(i) + " : " + str(assembly_overlap) + " -> " + str(proj_overlap) )
 		results[assembly_overlap] = proj_overlap
 	return results

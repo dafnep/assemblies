@@ -1,7 +1,7 @@
 # Default simulation library containing:
 # - Basic projection simulations (convergence for different beta, etc)
 # - Merge simulations (different betas)
-# - Pattern completion simulations
+# - Pattern completion simulations 
 # - Association simulations
 # - simulations studying density in assemblies (higher than ambient p)
 
@@ -91,6 +91,8 @@ def pattern_com_repeated(n=100000,k=317,p=0.05,beta=0.05,project_iter=12,alpha=0
 		rounds_to_completion.append(rounds)
 	saved_winners = b.areas["A"].saved_winners
 	overlaps = bu.get_overlaps(saved_winners,project_iter-1,percentage=True)
+	print(overlaps)
+	print(rounds_to_completion)
 	return overlaps, rounds_to_completion
 
 def pattern_com_alphas(n=100000,k=317,p=0.01,beta=0.05,
@@ -445,3 +447,5 @@ def fixed_assembly_merge(n=100000, k=317, p=0.01, beta=0.05):
 			{"A":["A"], "B":["B"]})
 	b.areas["A"].fix_assembly()
 	b.areas["B"].fix_assembly()
+
+project_sim()
