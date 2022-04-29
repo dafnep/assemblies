@@ -303,8 +303,10 @@ class Brain:
 			print(area.new_winners)
 			print(area.new_winners.size)
 		
-		if (len(from_stimuli) == 0 and len(from_area)==1):
-			self.areas[area].winners_dict[from_area[0]] = new_winner_indices
+		if (len(from_stimuli) == 0 and len(from_areas)==1):
+			print(name)
+			print(self.areas[name].winners_dict)
+			self.areas[name].winners_dict[from_areas[0]] = new_winner_indices
 
 		if verbose:
 			print("num_first_winners (its the new ones): ") 
@@ -312,6 +314,7 @@ class Brain:
 
 		# for i in num_first_winners
 		# generate where input came from
+
 			# 1) can sample input from array of size total_k, use ranges
 			# 2) can use stars/stripes method: if m total inputs, sample (m-1) out of total_k
 		first_winner_to_inputs = {}
