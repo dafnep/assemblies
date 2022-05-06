@@ -221,105 +221,141 @@ def association_grand_sim(n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=2
 		results[i] = float(o)/float(k)
 	return results
 
-def associate_multiple_areas(b, n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
-	#b = brain.Brain(p,save_winners=True)
+def associate_multiple_areas(b, n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,n_areas=2):
+	# areas, stimuli, assemblies (to stability) have already been created
 	total_stim_dict = {}
 	total_area_dict = {}
-	target_area = str(chr(64+(areas+1)))
-	for i in range(1, areas+1):	
-		stim_name = "stim" + str(chr(64+i))
-		#b.add_stimulus(stim_name,k)
-		#b.add_area(str(chr(64+i)),n,k,beta)
-		total_stim_dict[stim_name] = [str(chr(64+i))]
-		total_area_dict[str(chr(64+i))] = [str(chr(64+i))]
-	#b.add_area(target_area,n,k,beta)
-	#b.project(total_stim_dict,{})
-	# Create assemblies in each area to stability
-	#for i in range(0,9):
-	#	b.project(total_stim_dict, total_area_dict)
 
-	# Add target area in lists of area_dict
-	for key, value in total_area_dict.items():
-		total_area_dict[key].append(target_area)
-	# Project the assembly of each area to the target area
-	for i in range(1, areas+1):	
-		stim_name = "stim" + str(chr(64+i))
+	# area in which we will associate the assemblies
+	target_area = str(chr(64+(n_areas+1)))
+
+	# assembly we care about (the person we want to remember)
+	important_area = str(chr(64+(n_areas)))
+	important_stim_name = "stim" + important_area
+
+	# Project each assembly to the target area
+	for i in range(1, n_areas):	
 		area_name = str(chr(64+i))
-		stim_dict = {stim_name:[area_name]}
-		area_dict = {}
-		area_dict[area_name] = total_area_dict[area_name]
-		#b.project(stim_dict,area_dict)
+		stim_name = "stim" + area_name
+		stim_dict = {stim_name:[area_name], important_stim_name: [important_area]}
+		area_dict = {area_name:[area_name, target_area], important_area:[important_area, target_area]}
+		print("stim_dict, area_dict")
+		print(stim_dict, area_dict)
+		b.project(stim_dict, area_dict)
 		area_dict[target_area] = [target_area]
-		#for j in range(0,9):
-			#b.project(stim_dict,area_dict)
-
-	# Project all assemblies to the target area
-	b.project(total_stim_dict, total_area_dict)
-	total_area_dict[target_area] = [target_area]
-	for i in range(0,overlap_iter-1):
-		b.project(total_stim_dict, total_area_dict)
+		print("stim_dict, area_dict")
+		print(stim_dict, area_dict)
+		for i in range(0,overlap_iter-1):
+			b.project(stim_dict, area_dict)
 
 	return b
 
-def association_sim_multiple_areas(b,n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,areas=2):
-	target_area = str(chr(64+(areas+1)))
-	b = associate_multiple_areas(b,n,k,p,beta,overlap_iter,areas)
+def association_sim_multiple_areas(b,n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,n_areas=2):
+	target_area = str(chr(64+(n_areas+1)))
+	b = associate_multiple_areas(b,n,k,p,beta,overlap_iter,n_areas)
 	return b.areas[target_area].saved_w,b.areas[target_area].saved_winners
 
-def association_grand_sim_multiple_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,areas=2):
-	#b = brain.Brain(p,save_winners=True)
+def association_grand_sim_multiple_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,n_areas=2):
+	# areas, stimuli, assemblies (to stability) have already been created
 	total_stim_dict = {}
 	total_area_dict = {}
-	target_area = str(chr(64+(areas+1)))
-	for i in range(1, areas+1):	
-		stim_name = "stim" + str(chr(64+i))
-		#b.add_stimulus(stim_name,k)
-		#b.add_area(str(chr(64+i)),n,k,beta)
-		total_stim_dict[stim_name] = [str(chr(64+i))]
-		total_area_dict[str(chr(64+i))] = [str(chr(64+i))]
-	#b.add_area(target_area,n,k,beta)
-	#b.project(total_stim_dict,{})
-	# Create assemblies in each area to stability
-	#for i in range(0,9):
-		#b.project(total_stim_dict, total_area_dict)
 
-	# Add target area in lists of area_dict
-	for key, value in total_area_dict.items():
-		total_area_dict[key].append(target_area)
+	# area in which we will associate the assemblies
+	target_area = str(chr(64+(n_areas+1)))
 
-	# Project the assembly of each area to the target area
-	for i in range(1, areas+1):	
-		stim_name = "stim" + str(chr(64+i))
-		area_name = str(chr(64+i))
-		stim_dict = {stim_name:[area_name]}
-		area_dict = {}
-		area_dict[area_name] = total_area_dict[area_name]
-		#b.project(stim_dict,area_dict)
-		area_dict[target_area] = [target_area]
-		#for j in range(0,9):
-			#b.project(stim_dict,area_dict)
-	# Project all assemblies to the target area
-	b.project(total_stim_dict, total_area_dict)
-	total_area_dict[target_area] = [target_area]
-	for i in range(0,min_iter-2):
-		b.project(total_stim_dict, total_area_dict)
+	# assembly we care about (the person we want to remember)
+	important_area = str(chr(64+(n_areas)))
+	important_stim_name = "stim" + important_area
 
 	results = {}
-	for i in range(0,min_iter,max_iter+1): # is there a mistake here? shouldn't it be range(min_iter, max_iter+1)?
-		b.project(total_stim_dict, total_area_dict)
+	b_copy = {}
+	for j in range(1,2):
+		# Associate each assembly with the important assembly in the target area
+		for i in range(1, n_areas):	
+			area_name = str(chr(64+i))
+			stim_name = "stim" + area_name
+			stim_dict = {stim_name:[area_name], important_stim_name: [important_area]}
+			area_dict = {area_name:[area_name, target_area], important_area:[important_area, target_area]}
+			b.project(stim_dict, area_dict)
+			area_dict[target_area] = [target_area]
+			for l in range(0,9):
+				b.project(stim_dict, area_dict)
+		for i in range(0,10):
+			b.project({},{target_area: [target_area]})
+
 		b_copy = {}
 		b_copy_areas_winners = []
-		for j in range(1, areas+1):
-			b_copy[j] = copy.deepcopy(b)
-			area_name = str(chr(64+j))
-			stim_name = "stim" + str(chr(64+j))
-			# in copy j, project just str(chr(64+j))
-			b_copy[j].project({stim_name:[area_name]},{})
-			b_copy[j].project({},{area_name:[target_area]})
-			b_copy_areas_winners.append(b_copy[j].areas[target_area].winners)
+		for i in range(1, n_areas+1):
+			b_copy[i] = copy.deepcopy(b)
+			area_name = str(chr(64+i))
+			stim_name = "stim" + str(chr(64+i))
+			# in copy i, project just str(chr(64+i))
+			b_copy[i].project({stim_name:[area_name]},{})
+			b_copy[i].project({},{area_name:[target_area]})
+			b_copy_areas_winners.append(b_copy[i].areas[target_area].winners)
+
 		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
-		results[i] = float(o)/float(k)
-	return results
+		print("overlap")
+		print(float(o))
+		print(float(o)/float(k))
+		results[j] = float(o)/float(k)
+	winners_of_interest = b_copy[n_areas].areas[target_area].winners
+	print(winners_of_interest)
+	print("results")
+	print(results)
+	plot_association_overlap(results)
+	print("HI")
+	return results, winners_of_interest
+
+def association_grand_sim_4_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20):
+	results = {}
+	b_copy = {}
+	for j in range(1,2):
+		# Associate each assembly with the important assembly in the target area
+		b.project({"stimA":["A"], "stimD": ["D"]}, {"A":["A", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimA":["A"], "stimA": ["D"]}, {"A":["A", "E"], "D":["D", "E"], "E":["E"]})
+		b.project({"stimB":["B"], "stimD": ["D"]}, {"B":["B", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimB":["A"], "stimAD": ["D"]}, {"B":["B", "E"], "D":["D", "E"], "E":["E"]})
+		b.project({"stimC":["C"], "stimD": ["D"]}, {"C":["C", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimC":["C"], "stimAD": ["D"]}, {"C":["C", "E"], "D":["D", "E"], "E":["E"]})
+		for i in range(0,10):
+			b.project({},{"E": ["E"]})
+
+		b_copy = {}
+		b_copy_areas_winners = []
+		b_copy[1] = copy.deepcopy(b)
+		b_copy[2] = copy.deepcopy(b)
+		b_copy[3] = copy.deepcopy(b)
+		b_copy[4] = copy.deepcopy(b)
+		
+		b_copy[1].project({"A":["A"]},{})
+		b_copy[1].project({},{"A":["E"]})
+		b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
+		b_copy[2].project({"B":["B"]},{})
+		b_copy[2].project({},{"B":["E"]})
+		b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
+		b_copy[3].project({"C":["C"]},{})
+		b_copy[3].project({},{"C":["E"]})
+		b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
+		b_copy[4].project({"D":["D"]},{})
+		b_copy[4].project({},{"D":["E"]})
+		b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
+
+		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
+		print("overlap")
+		print(float(o))
+		print(float(o)/float(k))
+		results[j] = float(o)/float(k)
+	winners_of_interest = b_copy[4].areas["E"].winners
+	print(winners_of_interest)
+	print("results")
+	print(results)
+	plot_association_overlap(results)
+	print("HI")
+	return results, winners_of_interest
 
 def merge_sim(n=100000,k=317,p=0.01,beta=0.05,max_t=50):
 	b = brain.Brain(p)
@@ -410,6 +446,17 @@ def plot_merge_sim(show=True, save="", show_legend=False, use_text_font=True):
 	if not show and save != "":
 		plt.savefig(save)
 
+def plot_association_overlap(overlap_dict):
+	lists = sorted(overlap_dict.items()) # sorted by key, return a list of tuples
+	association_round, overlap = zip(*lists) # unpack a list of pairs into two tuples
+	print("association_round, overlap")
+	print(association_round, overlap)
+
+	plt.plot(association_round, overlap, 'ro')
+	plt.xlabel("Number of firing")
+	plt.ylabel("Overlap percentage")
+	plt.show()
+	return
 
 def plot_association(show=True, save="", use_text_font=True):
 	results = bu.sim_load('association_results')

@@ -211,7 +211,7 @@ class Brain:
 		prev_winner_inputs = [0.] * area.w
 		for stim in from_stimuli:
 			stim_inputs = self.stimuli_connectomes[stim][name]
-			print(self.stimuli_connectomes[stim][name].shape)
+			#print(self.stimuli_connectomes[stim][name].shape)
 			for i in range(area.w):
 				prev_winner_inputs[i] += stim_inputs[i]
 			
@@ -304,8 +304,8 @@ class Brain:
 			print(area.new_winners.size)
 		
 		if (len(from_stimuli) == 0 and len(from_areas)==1):
-			print(name)
-			print(self.areas[name].winners_dict)
+			#print(name)
+			#print(self.areas[name].winners_dict)
 			self.areas[name].winners_dict[from_areas[0]] = new_winner_indices
 
 		if verbose:
