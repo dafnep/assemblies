@@ -15,6 +15,7 @@ import random
 import copy
 import pickle
 import matplotlib.pyplot as plt
+import sys
 
 from collections import OrderedDict
 
@@ -250,12 +251,12 @@ def associate_multiple_areas(b, n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,n
 
 	return b
 
-def association_sim_multiple_areas(b,n=100000,k=317,p=0.05,beta=0.1,overlap_iter=10,n_areas=2):
+def association_sim_multiple_areas(b,n=100000,k=317,p=0.01,beta=0.05,overlap_iter=10,n_areas=2):
 	target_area = str(chr(64+(n_areas+1)))
 	b = associate_multiple_areas(b,n,k,p,beta,overlap_iter,n_areas)
 	return b.areas[target_area].saved_w,b.areas[target_area].saved_winners
 
-def association_grand_sim_multiple_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,n_areas=2):
+def association_grand_sim_multiple_areas_together(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,n_areas=2):
 	# areas, stimuli, assemblies (to stability) have already been created
 	total_stim_dict = {}
 	total_area_dict = {}
@@ -269,60 +270,19 @@ def association_grand_sim_multiple_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_i
 
 	results = {}
 	b_copy = {}
-	for j in range(1,2):
-		# Associate each assembly with the important assembly in the target area
-		for i in range(1, n_areas):	
-			area_name = str(chr(64+i))
-			stim_name = "stim" + area_name
-			stim_dict = {stim_name:[area_name], important_stim_name: [important_area]}
-			area_dict = {area_name:[area_name, target_area], important_area:[important_area, target_area]}
-			b.project(stim_dict, area_dict)
-			area_dict[target_area] = [target_area]
-			for l in range(0,9):
-				b.project(stim_dict, area_dict)
-		for i in range(0,10):
-			b.project({},{target_area: [target_area]})
+	# Associate each assembly with the important assembly in the target area
+	for i in range(1, n_areas+1):	
+		area_name = str(chr(64+i))
+		stim_name = "stim" + area_name
+		total_stim_dict[stim_name] = [area_name]
+		total_area_dict[area_name] = [area_name, target_area]
 
-		b_copy = {}
-		b_copy_areas_winners = []
-		for i in range(1, n_areas+1):
-			b_copy[i] = copy.deepcopy(b)
-			area_name = str(chr(64+i))
-			stim_name = "stim" + str(chr(64+i))
-			# in copy i, project just str(chr(64+i))
-			b_copy[i].project({stim_name:[area_name]},{})
-			b_copy[i].project({},{area_name:[target_area]})
-			b_copy_areas_winners.append(b_copy[i].areas[target_area].winners)
-
-		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
-		print("overlap")
-		print(float(o))
-		print(float(o)/float(k))
-		results[j] = float(o)/float(k)
-	winners_of_interest = b_copy[n_areas].areas[target_area].winners
-	print(winners_of_interest)
-	print("results")
-	print(results)
-	plot_association_overlap(results)
-	print("HI")
-	return results, winners_of_interest
-
-def association_grand_sim_4_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20):
-	results = {}
-	b_copy = {}
-	for j in range(1,2):
-		# Associate each assembly with the important assembly in the target area
-		b.project({"stimA":["A"], "stimD": ["D"]}, {"A":["A", "E"], "D":["D", "E"]})
-		for l in range(0,9):
-			b.project({"stimA":["A"], "stimA": ["D"]}, {"A":["A", "E"], "D":["D", "E"], "E":["E"]})
-		b.project({"stimB":["B"], "stimD": ["D"]}, {"B":["B", "E"], "D":["D", "E"]})
-		for l in range(0,9):
-			b.project({"stimB":["A"], "stimAD": ["D"]}, {"B":["B", "E"], "D":["D", "E"], "E":["E"]})
-		b.project({"stimC":["C"], "stimD": ["D"]}, {"C":["C", "E"], "D":["D", "E"]})
-		for l in range(0,9):
-			b.project({"stimC":["C"], "stimAD": ["D"]}, {"C":["C", "E"], "D":["D", "E"], "E":["E"]})
-		for i in range(0,10):
-			b.project({},{"E": ["E"]})
+		
+	b.project(total_stim_dict,total_area_dict)
+	total_area_dict[target_area] = [target_area]
+	l=0
+	while True:
+		b.project(total_stim_dict,total_area_dict)
 
 		b_copy = {}
 		b_copy_areas_winners = []
@@ -331,31 +291,304 @@ def association_grand_sim_4_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,
 		b_copy[3] = copy.deepcopy(b)
 		b_copy[4] = copy.deepcopy(b)
 		
-		b_copy[1].project({"A":["A"]},{})
+		b_copy[1].project({"stimA":["A"]},{})
 		b_copy[1].project({},{"A":["E"]})
 		b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
-		b_copy[2].project({"B":["B"]},{})
+		b_copy[2].project({"stimB":["B"]},{})
 		b_copy[2].project({},{"B":["E"]})
 		b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
-		b_copy[3].project({"C":["C"]},{})
+		b_copy[3].project({"stimC":["C"]},{})
 		b_copy[3].project({},{"C":["E"]})
 		b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
-		b_copy[4].project({"D":["D"]},{})
+		b_copy[4].project({"stimD":["D"]},{})
+		b_copy[4].project({},{"D":["E"]})
+		b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
+
+		o_a_d = bu.overlap(b_copy[1].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_b_d = bu.overlap(b_copy[2].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_c_d = bu.overlap(b_copy[3].areas["E"].winners, b_copy[4].areas["E"].winners)
+		
+		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
+		print("total overlap")
+		print(float(o)/float(k))
+		print("a-d overlap")
+		print(float(o_a_d)/float(k))
+		print("b-d overlap")
+		print(float(o_b_d)/float(k))
+		print("c-d overlap")
+		print(float(o_c_d)/float(k))
+		results[l] = float(o)/float(k)
+		l +=1
+		if (float(o)/float(k) > 0.15):
+			break
+	
+	results_after_E = {}
+
+	for i in range(0,10):
+		b.project({},{target_area: [target_area]})
+
+		b_copy = {}
+		b_copy_areas_winners = []
+		b_copy[1] = copy.deepcopy(b)
+		b_copy[2] = copy.deepcopy(b)
+		b_copy[3] = copy.deepcopy(b)
+		b_copy[4] = copy.deepcopy(b)
+		
+		b_copy[1].project({"stimA":["A"]},{})
+		b_copy[1].project({},{"A":["E"]})
+		b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
+		b_copy[2].project({"stimB":["B"]},{})
+		b_copy[2].project({},{"B":["E"]})
+		b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
+		b_copy[3].project({"stimC":["C"]},{})
+		b_copy[3].project({},{"C":["E"]})
+		b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
+		b_copy[4].project({"stimD":["D"]},{})
 		b_copy[4].project({},{"D":["E"]})
 		b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
 
 		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
-		print("overlap")
-		print(float(o))
+		print("total overlap")
 		print(float(o)/float(k))
-		results[j] = float(o)/float(k)
+		results_after_E[i] = float(o)/float(k)
+
 	winners_of_interest = b_copy[4].areas["E"].winners
-	print(winners_of_interest)
 	print("results")
 	print(results)
-	plot_association_overlap(results)
-	print("HI")
+	print("results_after_E")
+	print(results_after_E)
+	#plot_association_overlap(results)
 	return results, winners_of_interest
+
+def association_grand_sim_multiple_areas_not_together(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20,n_areas=2):
+	# areas, stimuli, assemblies (to stability) have already been created
+
+	# area in which we will associate the assemblies
+	target_area = str(chr(64+(n_areas+1)))
+
+	# assembly we care about (the person we want to remember)
+	important_area = str(chr(64+(n_areas)))
+	important_stim_name = "stim" + important_area
+
+	results = {}
+	b_copy = {}
+	# Associate each assembly with the important assembly in the target area
+	
+	for i in range(1, n_areas):	
+		area_name = str(chr(64+i))
+		stim_name = "stim" + area_name
+		stim_dict = {stim_name:[area_name], important_stim_name: [important_area]}
+		area_dict = {area_name:[area_name, target_area], important_area:[important_area, target_area]}
+		b.project(stim_dict, area_dict)
+		area_dict[target_area] = [target_area]
+		for l in range(0,9):
+			b.project(stim_dict, area_dict)
+	
+	"""for i in range(0,10):
+		b.project({},{target_area: [target_area]})"""
+
+	b_copy = {}
+	b_copy_areas_winners = []
+	b_copy[1] = copy.deepcopy(b)
+	b_copy[2] = copy.deepcopy(b)
+	b_copy[3] = copy.deepcopy(b)
+	b_copy[4] = copy.deepcopy(b)
+	
+	b_copy[1].project({"stimA":["A"]},{})
+	b_copy[1].project({},{"A":["E"]})
+	b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
+	b_copy[2].project({"stimB":["B"]},{})
+	b_copy[2].project({},{"B":["E"]})
+	b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
+	b_copy[3].project({"stimC":["C"]},{})
+	b_copy[3].project({},{"C":["E"]})
+	b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
+	b_copy[4].project({"stimD":["D"]},{})
+	b_copy[4].project({},{"D":["E"]})
+	b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
+
+	o_a_d = bu.overlap(b_copy[1].areas["E"].winners, b_copy[4].areas["E"].winners)
+	o_b_d = bu.overlap(b_copy[2].areas["E"].winners, b_copy[4].areas["E"].winners)
+	o_c_d = bu.overlap(b_copy[3].areas["E"].winners, b_copy[4].areas["E"].winners)
+	o = bu.overlap_multiple_lists(*b_copy_areas_winners)
+	print("total overlap")
+	print(float(o)/float(k))
+	print("a-d overlap")
+	print(float(o_a_d)/float(k))
+	print("b-d overlap")
+	print(float(o_b_d)/float(k))
+	print("c-d overlap")
+	print(float(o_c_d)/float(k))
+	results[1] = float(o)/float(k)
+	winners_of_interest = b_copy[4].areas["E"].winners
+	print("results")
+	print(results)
+	#plot_association_overlap(results)
+	return results, winners_of_interest
+
+def association_grand_sim_4_areas_together(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20):
+	results = {}
+	b_copy = {}
+
+	
+
+	b.project({"stimA":["A"], "stimD": ["D"], "stimB": ["B"], "stimC": ["C"]}, {"A":["A", "E"], "D":["D", "E"], "C":["C", "E"], "B":["B", "E"]})
+	for l in range(0,15):
+		b.project({"stimA":["A"], "stimD": ["D"], "stimB": ["B"], "stimC": ["C"]}, {"A":["A", "E"], "D":["D", "E"], "C":["C", "E"], "B":["B", "E"], "E": ["E"]})
+
+	#for i in range(0,10):
+	# 	#b.project({},{"E": ["E"]}, True)
+		b_copy = {}
+		b_copy_areas_winners = []
+		b_copy[1] = copy.deepcopy(b)
+		b_copy[2] = copy.deepcopy(b)
+		b_copy[3] = copy.deepcopy(b)
+		b_copy[4] = copy.deepcopy(b)
+		
+		b_copy[1].project({"stimA":["A"]},{})
+		b_copy[1].project({},{"A":["E"]})
+		b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
+		b_copy[2].project({"stimB":["B"]},{})
+		b_copy[2].project({},{"B":["E"]})
+		b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
+		b_copy[3].project({"stimC":["C"]},{})
+		b_copy[3].project({},{"C":["E"]})
+		b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
+		b_copy[4].project({"stimD":["D"]},{})
+		b_copy[4].project({},{"D":["E"]})
+		b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
+
+		o_a_d = bu.overlap(b_copy[1].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_b_d = bu.overlap(b_copy[2].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_c_d = bu.overlap(b_copy[3].areas["E"].winners, b_copy[4].areas["E"].winners)
+	
+		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
+		print("total overlap")
+		print(float(o)/float(k))
+		print("a-d overlap")
+		print(float(o_a_d)/float(k))
+		print("b-d overlap")
+		print(float(o_b_d)/float(k))
+		print("c-d overlap")
+		print(float(o_c_d)/float(k))
+		results[l] = float(o)/float(k)
+	winners_of_interest = b_copy[4].areas["E"].winners
+	print("results")
+	print(results)
+	#plot_association_overlap(results)
+	return results, winners_of_interest
+
+def association_grand_sim_4_areas(b,n=100000,k=317,p=0.01,beta=0.05,min_iter=10,max_iter=20):
+		results = {}
+		b_copy = {}
+
+		# Associate each assembly with the important assembly in the target area
+		# A-D
+		b.project({"stimA":["A"], "stimD": ["D"]}, {"A":["A", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimA":["A"], "stimD": ["D"]}, {"A":["A", "E"], "D":["D", "E"], "E":["E"]})
+
+		########    test     #########
+		b_copy0 = {}
+		b_copy_areas_winners0 = []
+		b_copy0[1] = copy.deepcopy(b)
+		b_copy0[1].project({"stimA":["A"]},{})
+		b_copy0[1].project({},{"A":["E"]})
+		b_copy0[4] = copy.deepcopy(b)
+		b_copy_areas_winners0.append(b_copy0[1].areas["E"].winners)
+		b_copy0[4].project({"stimD":["D"]},{})
+		b_copy0[4].project({},{"D":["E"]})
+		b_copy_areas_winners0.append(b_copy0[4].areas["E"].winners)
+
+		print("a-d initial overlap")
+		print(float( bu.overlap(b_copy0[1].areas["E"].winners, b_copy0[4].areas["E"].winners))/float(k))
+		# B-D
+		b.project({"stimB":["B"], "stimD": ["D"]}, {"B":["B", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimB":["B"], "stimD": ["D"]}, {"B":["B", "E"], "D":["D", "E"], "E":["E"]})
+
+		b_copy0 = {}
+		b_copy_areas_winners0 = []
+		b_copy0[1] = copy.deepcopy(b)
+		b_copy0[1].project({"stimA":["A"]},{})
+		b_copy0[1].project({},{"A":["E"]})
+		b_copy0[2] = copy.deepcopy(b)
+		b_copy0[2].project({"stimB":["B"]},{})
+		b_copy0[2].project({},{"B":["E"]})
+		b_copy0[4] = copy.deepcopy(b)
+		b_copy_areas_winners0.append(b_copy0[2].areas["E"].winners)
+		b_copy0[4].project({"stimD":["D"]},{})
+		b_copy0[4].project({},{"D":["E"]})
+		b_copy_areas_winners0.append(b_copy0[4].areas["E"].winners)
+
+		print("b-d initial overlap")
+		print(float( bu.overlap(b_copy0[2].areas["E"].winners, b_copy0[4].areas["E"].winners))/float(k))
+
+		print("a-d initial overlap")
+		print(float( bu.overlap(b_copy0[1].areas["E"].winners, b_copy0[4].areas["E"].winners))/float(k))
+
+		# C-D
+		b.project({"stimC":["C"], "stimD": ["D"]}, {"C":["C", "E"], "D":["D", "E"]})
+		for l in range(0,9):
+			b.project({"stimC":["C"], "stimD": ["D"]}, {"C":["C", "E"], "D":["D", "E"], "E":["E"]})
+
+		b_copy0 = {}
+		b_copy_areas_winners0 = []
+		b_copy0[3] = copy.deepcopy(b)
+		b_copy0[3].project({"stimC":["C"]},{})
+		b_copy0[3].project({},{"C":["E"]})
+		b_copy0[4] = copy.deepcopy(b)
+		b_copy_areas_winners0.append(b_copy0[3].areas["E"].winners)
+		b_copy0[4].project({"stimD":["D"]},{})
+		b_copy0[4].project({},{"D":["E"]})
+		b_copy_areas_winners0.append(b_copy0[4].areas["E"].winners)
+
+		print("c-d initial overlap")
+		print(float( bu.overlap(b_copy0[3].areas["E"].winners, b_copy0[4].areas["E"].winners))/float(k))
+		
+	
+
+		#for i in range(0,10):
+		# 	#b.project({},{"E": ["E"]}, True)
+		b_copy = {}
+		b_copy_areas_winners = []
+		b_copy[1] = copy.deepcopy(b)
+		b_copy[2] = copy.deepcopy(b)
+		b_copy[3] = copy.deepcopy(b)
+		b_copy[4] = copy.deepcopy(b)
+		
+		b_copy[1].project({"stimA":["A"]},{})
+		b_copy[1].project({},{"A":["E"]})
+		b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
+		b_copy[2].project({"stimB":["B"]},{})
+		b_copy[2].project({},{"B":["E"]})
+		b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
+		b_copy[3].project({"stimC":["C"]},{})
+		b_copy[3].project({},{"C":["E"]})
+		b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
+		b_copy[4].project({"stimD":["D"]},{})
+		b_copy[4].project({},{"D":["E"]})
+		b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
+
+		o_a_d = bu.overlap(b_copy[1].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_b_d = bu.overlap(b_copy[2].areas["E"].winners, b_copy[4].areas["E"].winners)
+		o_c_d = bu.overlap(b_copy[3].areas["E"].winners, b_copy[4].areas["E"].winners)
+
+		o = bu.overlap_multiple_lists(*b_copy_areas_winners)
+		print("total overlap")
+		print(float(o)/float(k))
+		print("a-d overlap")
+		print(float(o_a_d)/float(k))
+		print("b-d overlap")
+		print(float(o_b_d)/float(k))
+		print("c-d overlap")
+		print(float(o_c_d)/float(k))
+		results[1] = float(o)/float(k)
+		winners_of_interest = b_copy[4].areas["E"].winners
+		print("results")
+		print(results)
+		#plot_association_overlap(results)
+		return results, winners_of_interest
 
 def merge_sim(n=100000,k=317,p=0.01,beta=0.05,max_t=50):
 	b = brain.Brain(p)
@@ -449,14 +682,12 @@ def plot_merge_sim(show=True, save="", show_legend=False, use_text_font=True):
 def plot_association_overlap(overlap_dict):
 	lists = sorted(overlap_dict.items()) # sorted by key, return a list of tuples
 	association_round, overlap = zip(*lists) # unpack a list of pairs into two tuples
-	print("association_round, overlap")
-	print(association_round, overlap)
 
 	plt.plot(association_round, overlap, 'ro')
 	plt.xlabel("Number of firing")
 	plt.ylabel("Overlap percentage")
 	plt.show()
-	return
+	return  
 
 def plot_association(show=True, save="", use_text_font=True):
 	results = bu.sim_load('association_results')

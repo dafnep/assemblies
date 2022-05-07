@@ -148,7 +148,7 @@ class Brain:
 			for (stim, new_beta) in update_rules:
 				self.areas[area].stimulus_beta[stim] = new_beta
 
-	def project(self, stim_to_area, area_to_area, verbose=False):
+	def project(self, stim_to_area, area_to_area, printwinners = False,verbose=False):
 		# Validate stim_area, area_area well defined
 		# stim_to_area: {"stim1":["A"], "stim2":["C","A"]}
 		# area_to_area: {"A":["A","B"],"C":["C","A"]}
@@ -181,7 +181,7 @@ class Brain:
 		
 
 		for area in to_update:
-			num_first_winners = self.project_into(self.areas[area], stim_in[area], area_in[area], verbose)
+			num_first_winners = self.project_into(self.areas[area], stim_in[area], area_in[area], verbose, printwinners)
 			self.areas[area].num_first_winners = num_first_winners
 			#print(num_first_winners)
 			if self.save_winners:
@@ -193,7 +193,7 @@ class Brain:
 			if self.save_size:
 				self.areas[area].saved_w.append(self.areas[area].w)
 
-	def project_into(self, area, from_stimuli, from_areas, verbose=True):
+	def project_into(self, area, from_stimuli, from_areas, verbose=False , printwinners=False):
 	# projecting everything in from stim_in[area] and area_in[area]
 	# calculate: inputs to self.connectomes[area] (previous winners)
 	# calculate: potential new winners, Binomial(sum of in sizes, k-top)
@@ -314,6 +314,10 @@ class Brain:
 
 		# for i in num_first_winners
 		# generate where input came from
+		if printwinners:
+			print("new_winners here it's their index: ")
+			print(set(area.new_winners) & set(area.winners))
+			
 
 			# 1) can sample input from array of size total_k, use ranges
 			# 2) can use stars/stripes method: if m total inputs, sample (m-1) out of total_k
