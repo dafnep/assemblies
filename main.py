@@ -21,7 +21,7 @@ neurons_are_active_for = 10
 beta_list = [0.3,0.2,0.1,0.075,0.05,0.03,0.01,0.007,0.005] 
 n_areas_list = [2,3,4,5,6,7,8] # number of areas not including the target area (i.e., the area of association)
 association_overlap_threshold_list = [0.10,0.15,0.20]
-n_runs_per_experiment = 10
+n_runs_per_experiment = 1
 
 
 def firing_neurons_multiple_areas_associated_together(n,k,p,beta,project_iter,n_areas,assoc_overlap_threshold,n_firing_areas,df):
@@ -120,7 +120,7 @@ def firing_neurons_multiple_areas_associated_together(n,k,p,beta,project_iter,n_
     return df
 
 if __name__ == "__main__":
-    df = pd.DataFrame(columns=['#areas', 'beta', '#firing_areas', 'assoc_overlap_threshold', 
+    df = pd.DataFrame(columns=['beta', 'assoc_overlap_threshold', '#areas', '#firing_areas',
                                 '#firings_till_assoc_overlap', 'assoc_overlap','overlap_with_ass_interest_after_1_firing',
                                 '#firings_till_convergence', 'overlap_with_ass_interest_upon_convergence','max_overlap_with_ass_interest'])
     df.to_csv (r'together.csv', index = False, header=True)
@@ -139,7 +139,7 @@ if __name__ == "__main__":
                     df2['#firings_till_convergence'] = 0
                     df2['overlap_with_ass_interest_upon_convergence'] = 0
                     df2['max_overlap_with_ass_interest'] = 0
-                    
+
                     for i in range(n_runs_per_experiment):
                         df2 = firing_neurons_multiple_areas_associated_together(n,k,p,beta,project_iter,n_areas,assoc_overlap_threshold,n_firing_areas,df2)
         
@@ -150,7 +150,7 @@ if __name__ == "__main__":
                     df2['overlap_with_ass_interest_upon_convergence'] = float(df2['overlap_with_ass_interest_upon_convergence'])/float(n_runs_per_experiment)
                     df2['max_overlap_with_ass_interest'] = float(df2['max_overlap_with_ass_interest'])/float(n_runs_per_experiment)
         
-                    df = pd.DataFrame(columns=['#areas', 'beta', '#firing_areas', 'assoc_overlap_threshold', 
+                    df = pd.DataFrame(columns=['beta', 'assoc_overlap_threshold', '#areas', '#firing_areas',
                                             '#firings_till_assoc_overlap', 'assoc_overlap','overlap_with_ass_interest_after_1_firing',
                                             '#firings_till_convergence', 'overlap_with_ass_interest_upon_convergence','max_overlap_with_ass_interest'])
                     
