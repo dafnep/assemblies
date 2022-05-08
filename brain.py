@@ -200,7 +200,7 @@ class Brain:
 	# k top of previous winners and potential new winners
 	# if new winners > 0, redo connectome and intra_connectomes 
 	# have to wait to replace new_winners
-		print("Projecting " + ",".join(from_stimuli) + " and " + ",".join(from_areas) + " into " + area.name)
+		#print("Projecting " + ",".join(from_stimuli) + " and " + ",".join(from_areas) + " into " + area.name)
 
 		# If projecting from area with no assembly, complain.
 		for from_area in from_areas:

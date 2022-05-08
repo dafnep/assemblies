@@ -8,79 +8,24 @@ import copy
 import simulations
 
 import sys 
+import pandas as pd
+import random
 
 n=100000
 k=317
 p=0.05
-beta=0.1
+#beta=0.1
 project_iter=10
 number_firings=10
-neurons_are_active_for = 10
-
-def find_firing_neurons(n=100000,k=317,p=0.05,beta=0.1,project_iter=10,number_firings=10,neurons_are_active_for = 10):
-    print("RUNNING")
-    b = brain.Brain(p,save_winners=True)
-    b.add_stimulus("stimA",k)
-    b.add_area("A",n,k,beta)
-    b.add_stimulus("stimB",k)
-    b.add_area("B",n,k,beta)
-    b.add_stimulus("stimC",k)
-    b.add_area("C",n,k,beta)
-    b.add_stimulus("stimD",k)
-    b.add_area("D",n,k,beta)
-    b.add_area("E",n,k,beta) # final project test area
-    b.project({"stimA":["A"],"stimB":["B"],"stimC":["C"],"stimD":["D"]},{})
-    # Create assemblies A,B,C,D to stability
-    for i in range(0,9):
-        b.project({"stimA":["A"],"stimB":["B"],"stimC":["C"],"stimD":["D"]}, 
-                {"A":["A"],"B":["B"], "C":["C"],"D":["D"]})
-    #print(b.areas["E"].winners_dict)
-    #project assemblies to area of interest E must not be done at the same time
-    b.project({"stimA":["A"]},{"A":["A","E"]})
-    for i in range(0,9):
-        b.project({"stimA":["A"]},{"A":["A","E"], "E":["E"]})
-    b.project({"stimB":["B"]},{"B":["B","E"]})
-    for i in range(0,9):
-        b.project({"stimB":["B"]},{"B":["B","E"], "E":["E"]})
-    b.project({"stimC":["C"]},{"C":["C","E"]})
-    for i in range(0,9):
-        b.project({"stimC":["C"]},{"C":["C","E"], "E":["E"]})
-    b.project({"stimD":["D"]},{"D":["D","E"]})
-    for i in range(0,9):
-        b.project({"stimD":["D"]},{"D":["D","E"], "E":["E"]})
-
-    overlap, winners_from_interesting_area = simulations.association_grand_sim_4_areas(b,n,k,p,beta,10,20)
-    
-    final_stim_dict = {}
-    b.project({"stimA":["A"],"stimB":["B"],"stimC":["C"]}, 
-                {"A":["A", "E"],"B":["B", "E"], "C":["C", "E"]})
-    for i in range(0,1):
-        b.project({"stimA":["A"],"stimB":["B"],"stimC":["C"]}, 
-                {"A":["A", "E"],"B":["B", "E"], "C":["C", "E"], "E": ["E"]})
-
-    total_overlap = {}
-    winners = b.areas["E"].winners
-    overlap_with_assembly_of_interest = bu.overlap(winners, winners_from_interesting_area)
-    total_overlap[0] = float(overlap_with_assembly_of_interest)/float(k)
-    for i in range(1,10):
-        b.project({},{"E": ["E"]})
-        winners = b.areas["E"].winners
-        overlap_with_assembly_of_interest = bu.overlap(winners, winners_from_interesting_area)
-        total_overlap[i] = float(overlap_with_assembly_of_interest)/float(k)
-    
-    print("Total overlap with d")
-    print(total_overlap)
-
-    simulations.plot_association_overlap(total_overlap)
-    return
+neurons_are_active_for = 10   
+beta_list = [0.3,0.2,0.1,0.075,0.05,0.03,0.01,0.007,0.005] 
+n_areas_list = [2,3,4,5,6,7,8] # number of areas not including the target area (i.e., the area of association)
+association_overlap_threshold_list = [0.10,0.15,0.20]
+n_runs_per_experiment = 10
 
 
+def firing_neurons_multiple_areas_associated_together(n,k,p,beta,project_iter,n_areas,assoc_overlap_threshold,n_firing_areas,df):
 
-    
-
-
-def find_firing_neurons_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,project_iter=10,number_firings=10,neurons_are_active_for = 10, n_areas=4):
-    print("RUNNING find_firing_neurons_multiple_areas")
     b = brain.Brain(p,save_winners=True)
 
     # area in which we will associate the assemblies
@@ -114,91 +59,101 @@ def find_firing_neurons_multiple_areas(n=100000,k=317,p=0.05,beta=0.1,project_it
 
     # Project the assembly of each area to the target area
     for i in range(1, n_areas+1):
-        
         area_name = str(chr(64+i))
         stim_name = "stim" + area_name
         stim_dict = {stim_name:[area_name]}
         area_dict = {}
         area_dict[area_name] = total_area_dict[area_name]
-        if i==1:
-            print(stim_dict,area_dict)	
         b.project(stim_dict,area_dict)
         area_dict[target_area] = [target_area]
         for j in range(0,9):
-            if i==1:
-                print(stim_dict,area_dict)
             b.project(stim_dict,area_dict)
     
+    # associate the assemblies in the target area
     # winners_from_interesting_area = the projection of the assembly we are interested in in the target area after the association
-    overlap, winners_from_interesting_area = simulations.association_grand_sim_multiple_areas_not_together(b,n,k,p,beta,10,20,4)
+    overlap, winners_from_interesting_area = simulations.association_grand_sim_multiple_areas_together(b,n,k,p,beta,10,20,n_areas,assoc_overlap_threshold,df)
 
-    b_copy = {}
-    b_copy_areas_winners = []
-    b_copy[1] = copy.deepcopy(b)
-    b_copy[2] = copy.deepcopy(b)
-    b_copy[3] = copy.deepcopy(b)
-    b_copy[4] = copy.deepcopy(b)
-    
-    b_copy[1].project({"stimA":["A"]},{})
-    b_copy[1].project({},{"A":["E"]})
-    b_copy_areas_winners.append(b_copy[1].areas["E"].winners)
-    b_copy[2].project({"stimB":["B"]},{})
-    b_copy[2].project({},{"B":["E"]})
-    b_copy_areas_winners.append(b_copy[2].areas["E"].winners)
-    b_copy[3].project({"stimC":["C"]},{})
-    b_copy[3].project({},{"C":["E"]})
-    b_copy_areas_winners.append(b_copy[3].areas["E"].winners)
-    b_copy[4].project({"stimD":["D"]},{})
-    b_copy[4].project({},{"D":["E"]})
-    b_copy_areas_winners.append(b_copy[4].areas["E"].winners)
-
-    o_a_d = bu.overlap(b_copy[1].areas["E"].winners, b_copy[4].areas["E"].winners)
-    o_b_d = bu.overlap(b_copy[2].areas["E"].winners, b_copy[4].areas["E"].winners)
-    o_c_d = bu.overlap(b_copy[3].areas["E"].winners, b_copy[4].areas["E"].winners)
-
-    o = bu.overlap_multiple_lists(*b_copy_areas_winners)
-    winners_from_interesting_area = b_copy[4].areas["E"].winners
-    print("HERE MAIN")
-    print("total overlap")
-    print(float(o)/float(k))
-    print("a-d overlap")
-    print(float(o_a_d)/float(k))
-    print("b-d overlap")
-    print(float(o_b_d)/float(k))
-    print("c-d overlap")
-    print(float(o_c_d)/float(k))
-
+    # fire the assemblies that represent the attributes
     final_stim_dict = {}
     final_area_dict = {}
-    for i in range(1, n_areas):
-        area_name = str(chr(64+i))
-        stim_name = "stim" + area_name
-        final_stim_dict[stim_name] = [area_name]
-        final_area_dict[area_name] = [area_name, target_area]
-
+    if n_firing_areas == n_areas-1:
+        for i in range(1, n_areas):
+            area_name = str(chr(64+i))
+            stim_name = "stim" + area_name
+            final_stim_dict[stim_name] = [area_name]
+            final_area_dict[area_name] = [area_name, target_area]
+    else:
+        firing_areas = random.sample(range(1, n_areas), n_firing_areas)
+        for i in firing_areas:
+            area_name = str(chr(64+i))
+            stim_name = "stim" + area_name
+            final_stim_dict[stim_name] = [area_name]
+            final_area_dict[area_name] = [area_name, target_area]
     b.project(final_stim_dict, final_area_dict)
 
     total_overlap = {}
     winners = b.areas[target_area].winners
     overlap_with_assembly_of_interest = bu.overlap(winners, winners_from_interesting_area)
     total_overlap[0] = float(overlap_with_assembly_of_interest)/float(k)
-    for i in range(1,10):
+
+    # keep projecting the target area to itself
+    i = 1
+    b.project({},{target_area: [target_area]})
+    winners = b.areas[target_area].winners
+    overlap_with_assembly_of_interest = bu.overlap(winners, winners_from_interesting_area)
+    total_overlap[i] = float(overlap_with_assembly_of_interest)/float(k)
+    while True:
         b.project({},{target_area: [target_area]})
         winners = b.areas[target_area].winners
         overlap_with_assembly_of_interest = bu.overlap(winners, winners_from_interesting_area)
+        i += 1
         total_overlap[i] = float(overlap_with_assembly_of_interest)/float(k)
+        if abs( (total_overlap[i-1] - total_overlap[i]) / float(total_overlap[i-1]) ) <= 0.0005:
+            break
     
-    print("Total overlap with d")
-    print(total_overlap)
-    
-    simulations.plot_association_overlap(total_overlap)
-    f.flush()
-    return
+    df['overlap_with_ass_interest_after_1_firing'] += total_overlap[1]
+    df['#firings_till_convergence'] += i
+    df['overlap_with_ass_interest_upon_convergence'] += total_overlap[i]
+    all_overlaps = total_overlap.values()
+    max_overlap = max(all_overlaps)
+    df['max_overlap_with_ass_interest'] += max_overlap
+    return df
 
 if __name__ == "__main__":
-    stdoutOrigin=sys.stdout 
-    f= open("separate_auto.txt", "w",0)
-    sys.stdout = f
-    find_firing_neurons_multiple_areas()
-    sys.stdout.close()
-    f.close()
+    df = pd.DataFrame(columns=['#areas', 'beta', '#firing_areas', 'assoc_overlap_threshold', 
+                                '#firings_till_assoc_overlap', 'assoc_overlap','overlap_with_ass_interest_after_1_firing',
+                                '#firings_till_convergence', 'overlap_with_ass_interest_upon_convergence','max_overlap_with_ass_interest'])
+    df.to_csv (r'together.csv', index = False, header=True)
+    for beta in beta_list:
+        for assoc_overlap_threshold in association_overlap_threshold_list:
+            for n_areas in n_areas_list:
+                for n_firing_areas in range(1, n_areas):
+                    df2 = {}
+                    df2['#areas'] = n_areas
+                    df2['beta'] = beta
+                    df2['#firing_areas'] = n_firing_areas
+                    df2['assoc_overlap_threshold'] = assoc_overlap_threshold
+                    df2['#firings_till_assoc_overlap'] = 0
+                    df2['assoc_overlap'] = 0
+                    df2['overlap_with_ass_interest_after_1_firing'] = 0
+                    df2['#firings_till_convergence'] = 0
+                    df2['overlap_with_ass_interest_upon_convergence'] = 0
+                    df2['max_overlap_with_ass_interest'] = 0
+                    
+                    for i in range(n_runs_per_experiment):
+                        df2 = firing_neurons_multiple_areas_associated_together(n,k,p,beta,project_iter,n_areas,assoc_overlap_threshold,n_firing_areas,df2)
+        
+                    df2['#firings_till_assoc_overlap'] = float(df2['#firings_till_assoc_overlap'])/float(n_runs_per_experiment)
+                    df2['assoc_overlap'] = float(df2['assoc_overlap'])/float(n_runs_per_experiment)
+                    df2['overlap_with_ass_interest_after_1_firing'] = float(df2['overlap_with_ass_interest_after_1_firing'])/float(n_runs_per_experiment)
+                    df2['#firings_till_convergence'] = float(df2['#firings_till_convergence'])/float(n_runs_per_experiment)
+                    df2['overlap_with_ass_interest_upon_convergence'] = float(df2['overlap_with_ass_interest_upon_convergence'])/float(n_runs_per_experiment)
+                    df2['max_overlap_with_ass_interest'] = float(df2['max_overlap_with_ass_interest'])/float(n_runs_per_experiment)
+        
+                    df = pd.DataFrame(columns=['#areas', 'beta', '#firing_areas', 'assoc_overlap_threshold', 
+                                            '#firings_till_assoc_overlap', 'assoc_overlap','overlap_with_ass_interest_after_1_firing',
+                                            '#firings_till_convergence', 'overlap_with_ass_interest_upon_convergence','max_overlap_with_ass_interest'])
+                    
+                    df = df.append(df2, ignore_index = True)
+                    df.to_csv (r'together.csv', mode='a', index=False, header=False)
+
