@@ -312,7 +312,7 @@ def association_grand_sim_multiple_areas_together(b,n,k,p,beta,min_iter,max_iter
 	
 	return results, winners_of_interest
 
-def association_grand_sim_multiple_areas_separate(b,n,k,p,beta,min_iter,max_iter,n_areas,assoc_overlap_threshold,df):
+def association_grand_sim_multiple_areas_separate(b,n,k,p,beta,min_iter,max_iter,n_areas,n_firings_in_assoc,df):
 	# areas, stimuli, assemblies (to stability) have already been created
 
 	# area in which we will associate the assemblies
@@ -333,6 +333,9 @@ def association_grand_sim_multiple_areas_separate(b,n,k,p,beta,min_iter,max_iter
 		for l in range(0,9):
 			b.project(stim_dict, area_dict)
 
+	for i in range(n_firings_in_assoc):
+		b.project({}, {target_area: [target_area]})
+
 	results = {}
 	b_copy = {}
 	b_copy_areas_winners = []
@@ -351,9 +354,12 @@ def association_grand_sim_multiple_areas_separate(b,n,k,p,beta,min_iter,max_iter
 		avg_pairwise_overlap += pairwise_overlap[i]
 	
 	avg_pairwise_overlap = float(avg_pairwise_overlap)/float(n_areas - 1)
+	df['avg_pairwise_assoc_overlap'] += avg_pairwise_overlap
 
 	total_association_overlap = bu.overlap_multiple_lists(*b_copy_areas_winners)
 	results[0] = float(total_association_overlap)/float(k)
+	df['total_assoc_overlap'] += results[0]
+	
 	
 	winners_of_interest = b_copy[n_areas].areas[target_area].winners
 
