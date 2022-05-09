@@ -304,11 +304,11 @@ def association_grand_sim_multiple_areas_together(b,n,k,p,beta,min_iter,max_iter
 		if (float(total_association_overlap)/float(k) > assoc_overlap_threshold):
 			break
 	
-	df['#firings_till_assoc_overlap'] += l
+	df['#firings_till_assoc_overlap'] = l
 
 	winners_of_interest = b_copy[n_areas].areas[target_area].winners
 
-	df['assoc_overlap'] += results[l-1]
+	df['assoc_overlap'] = results[l-1]
 	
 	return results, winners_of_interest
 
